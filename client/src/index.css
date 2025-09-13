@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Component styles */
+@layer components {
+  .stock-card {
+    @apply bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .stock-card-price-up {
+    @apply border-l-4 border-l-success-500;
+  }
+  
+  .stock-card-price-down {
+    @apply border-l-4 border-l-danger-500;
+  }
+  
+  .price-change-up {
+    @apply text-success-600 bg-success-50 px-2 py-1 rounded-md text-sm font-medium;
+  }
+  
+  .price-change-down {
+    @apply text-danger-600 bg-danger-50 px-2 py-1 rounded-md text-sm font-medium;
+  }
+  
+  .price-change-neutral {
+    @apply text-slate-600 bg-slate-50 px-2 py-1 rounded-md text-sm font-medium;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-slate-900 border border-slate-300 px-4 py-2 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200;
+  }
+  
+  .sidebar-nav {
+    @apply w-64 bg-white border-r border-slate-200 h-screen fixed left-0 top-0 z-30 overflow-y-auto;
+  }
+  
+  .sidebar-nav-item {
+    @apply flex items-center space-x-3 px-4 py-3 text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors duration-200;
+  }
+  
+  .sidebar-nav-item.active {
+    @apply bg-primary-50 text-primary-700 border-r-2 border-primary-600;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent;
+  }
+}
+
+/* Chart.js custom styles */
+.chartjs-render-monitor {
+  animation: none !important;
+}
+
+/* Loading animations */
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.loading-shimmer {
+  animation: shimmer 1.6s linear infinite;
+  background: linear-gradient(to right, #eff6ff 8%, #dbeafe 18%, #eff6ff 33%);
+  background-size: 800px 104px;
+}
+
+/* Responsive design utilities */
+@media (max-width: 768px) {
+  .sidebar-nav {
+    @apply transform -translate-x-full transition-transform duration-300;
+  }
+  
+  .sidebar-nav.mobile-open {
+    @apply translate-x-0;
+  }
+}
+
+/* High contrast mode for accessibility */
+@media (prefers-contrast: high) {
+  .stock-card {
+    @apply border-2 border-slate-400;
+  }
+  
+  .price-change-up {
+    @apply bg-green-200 text-green-900;
+  }
+  
+  .price-change-down {
+    @apply bg-red-200 text-red-900;
+  }
+}
+
+/* Dark mode support for future enhancement */
+@media (prefers-color-scheme: dark) {
+  body {
+    @apply bg-slate-900 text-slate-100;
+  }
+  
+  .stock-card {
+    @apply bg-slate-800 border-slate-700;
+  }
+  
+  .sidebar-nav {
+    @apply bg-slate-800 border-slate-700;
+  }
+  
+  .sidebar-nav-item {
+    @apply text-slate-300 hover:bg-slate-700 hover:text-slate-100;
+  }
+}
