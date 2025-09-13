@@ -175,6 +175,14 @@ export const logExternalAPI = (service: string, endpoint: string, status: number
   })
 }
 
+export const logAlert = (event: string, data?: any) => {
+  logger.info('Alert Event', {
+    event,
+    data,
+    timestamp: new Date().toISOString(),
+  })
+}
+
 // Performance monitoring
 export const performanceLogger = {
   start: (label: string) => {

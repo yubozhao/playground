@@ -7,9 +7,11 @@ import { Server as SocketIOServer } from 'socket.io'
 import dotenv from 'dotenv'
 import { logger } from './utils/logger'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
-import { connectDatabase } from './config/database'
+import { connectDatabase, initializeDatabase } from './config/database'
 import { connectRedis } from './config/redis'
+import { connectInfluxDB } from './config/influxdb'
 import { initializeWebSocket } from './websocket/socketHandler'
+import { alertService } from './services/alertService'
 import authRoutes from './routes/auth'
 import stockRoutes from './routes/stocks'
 import watchlistRoutes from './routes/watchlists'
@@ -112,13 +114,25 @@ const initializeServices = async () => {
     await connectDatabase()
     logger.info('Database connected successfully')
 
+    // Initialize database tables
+    await initializeDatabase()
+    logger.info('Database tables initialized successfully')
+
     // Connect to Redis
     await connectRedis()
     logger.info('Redis connected successfully')
 
+    // Connect to InfluxDB
+    await connectInfluxDB()
+    logger.info('InfluxDB connected successfully')
+
     // Initialize WebSocket handlers
     initializeWebSocket(io)
     logger.info('WebSocket handlers initialized')
+
+    // Start alert processing service
+    alertService.start()
+    logger.info('Alert processing service started')
 
   } catch (error) {
     logger.error('Failed to initialize services:', error)

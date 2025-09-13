@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: stock-dashboard-postgres
+    environment:
+      POSTGRES_DB: stock_dashboard
+      POSTGRES_USER: stockuser
+      POSTGRES_PASSWORD: stockpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/sql:/docker-entrypoint-initdb.d
+    networks:
+      - stock-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stockuser -d stock_dashboard"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: stock-dashboard-redis
+    command: redis-server --requirepass redispass
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - stock-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redispass", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # InfluxDB for Time-Series Data
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: stock-dashboard-influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: influxuser
+      DOCKER_INFLUXDB_INIT_PASSWORD: influxpass
+      DOCKER_INFLUXDB_INIT_ORG: stock-dashboard
+      DOCKER_INFLUXDB_INIT_BUCKET: stock-prices
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: stockdashboard-super-secret-admin-token
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    networks:
+      - stock-network
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: stock-dashboard-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://stockuser:stockpass@postgres:5432/stock_dashboard
+      REDIS_URL: redis://:redispass@redis:6379
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: stockdashboard-super-secret-admin-token
+      INFLUXDB_ORG: stock-dashboard
+      INFLUXDB_BUCKET: stock-prices
+      JWT_SECRET: development-super-secret-jwt-key-change-in-production
+      JWT_REFRESH_SECRET: development-super-secret-refresh-key-change-in-production
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server/src:/app/src:ro
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    networks:
+      - stock-network
+    restart: unless-stopped
+
+  # Frontend Client
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: development
+    container_name: stock-dashboard-frontend
+    environment:
+      VITE_API_URL: http://localhost:3001
+      VITE_WS_URL: ws://localhost:3001
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client/src:/app/src:ro
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - stock-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  influxdb_data:
+  influxdb_config:
+
+networks:
+  stock-network:
+    driver: bridge
